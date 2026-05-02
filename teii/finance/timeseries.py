@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import pandas as pd
 
-from teii.finance import FinanceClient, FinanceClientInvalidData
+from teii.finance import FinanceClient, FinanceClientInvalidData, FinanceClientParamError
 
 
 class TimeSeriesFinanceClient(FinanceClient):
@@ -39,23 +39,23 @@ class TimeSeriesFinanceClient(FinanceClient):
     def _build_data_frame(self) -> None:
         """ Build Panda's DataFrame and format data. """
 
-        # TODO
-        #   Comprueba que no se produce ningún error y genera excepción
-        #   'FinanceClientInvalidData' en caso contrario
+        try:
+            # Build Panda's data frame
+            data_frame = pd.DataFrame.from_dict(self._json_data, orient='index', dtype='float')
 
-        # Build Panda's data frame
-        data_frame = pd.DataFrame.from_dict(self._json_data, orient='index', dtype='float')
+            # Rename data fields
+            data_frame = data_frame.rename(columns={key: name_type[0]
+                                                    for key, name_type in self._data_field2name_type.items()})
 
-        # Rename data fields
-        data_frame = data_frame.rename(columns={key: name_type[0]
-                                                for key, name_type in self._data_field2name_type.items()})
+            # Set data field types
+            data_frame = data_frame.astype(dtype={name_type[0]: name_type[1]
+                                                  for key, name_type in self._data_field2name_type.items()})
 
-        # Set data field types
-        data_frame = data_frame.astype(dtype={name_type[0]: name_type[1]
-                                              for key, name_type in self._data_field2name_type.items()})
-
-        # Set index type
-        data_frame.index = data_frame.index.astype("datetime64[ns]")
+            # Set index type
+            data_frame.index = data_frame.index.astype("datetime64[ns]")
+        except Exception as e:
+            logging.error(f"Error building DataFrame: {e}")
+            raise FinanceClientInvalidData("Failed to build or format financial data frame.")
 
         # Sort data
         self._data_frame = data_frame.sort_index(ascending=True)
@@ -96,13 +96,12 @@ class TimeSeriesFinanceClient(FinanceClient):
 
         series = self._data_frame['aclose']
 
-        # TODO
-        #   Comprueba que from_date <= to_date y genera excepción
-        #   'FinanceClientParamError' en caso de error
+        if from_date is not None and to_date is not None and from_date > to_date:
+            raise FinanceClientParamError("'from_date' must be less than or equal to 'to_date'")
 
         # FIXME: type hint error
         if from_date is not None and to_date is not None:
-            series = series.loc[from_date:to_date]   # type: ignore
+            series = series.loc[pd.Timestamp(from_date):pd.Timestamp(to_date)]   # type: ignore
 
         return series
 
@@ -115,12 +114,11 @@ class TimeSeriesFinanceClient(FinanceClient):
 
         series = self._data_frame['volume']
 
-        # TODO
-        #   Comprueba que from_date <= to_date y genera excepción
-        #   'FinanceClientParamError' en caso de error
+        if from_date is not None and to_date is not None and from_date > to_date:
+            raise FinanceClientParamError("'from_date' must be less than or equal to 'to_date'")
 
         # FIXME: type hint error
         if from_date is not None and to_date is not None:
-            series = series.loc[from_date:to_date]   # type: ignore
+            series = series.loc[pd.Timestamp(from_date):pd.Timestamp(to_date)]   # type: ignore
 
         return series

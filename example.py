@@ -1,6 +1,7 @@
 """ Ejemplo de uso del paquete teii. """
 
 
+import datetime as dt
 import logging
 
 import matplotlib.pyplot as plt
@@ -11,10 +12,8 @@ import teii.finance as tf
 def setup_logging(logging_level):
     """ Crea y configura logger. """
 
-    # TODO
-    #   Configura logging para enviar la salida a un archivo
-
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename='example.log', filemode='w',
+                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
     logger.setLevel(logging_level)
     logger.info("Logger creado")
@@ -40,10 +39,11 @@ def main():
 
     # Define ticker y API key
     ticker = 'IBM'
-    my_alpha_vantage_api_key = 'api_key_inventada'    # Sólo funcionará con IBM (para demos)
-                                                      # Obtener un API key real de https://www.alphavantage.co/support/#api-key
-                                                      # (Pero hay fuertes limitaciones de uso diario, ojo, no más de 1 llamada por segundo
-                                                      #  5 llamadas por minuto y 25 llamadas por día),
+    my_alpha_vantage_api_key = 'KPCY3YFXA24HEJSY'
+    # Sólo funcionará con IBM (para demos). Obtener un API key real de:
+    # https://www.alphavantage.co/support/#api-key
+    # (Pero hay fuertes limitaciones de uso diario: no más de 1 llamada por segundo,
+    # 5 llamadas por minuto y 25 llamadas por día)
 
     # Crea cliente
     try:
@@ -55,11 +55,9 @@ def main():
         logger.error(f"{e}", exc_info=False)
     # Usa el cliente
     else:
-        # TODO
-        #   Filtra los datos para mostrar únicamente el año 2026
-
-        # Genera una serie de Pandas con precio de cierre semanal
-        pd_series = tf_client.weekly_price()
+        # Genera una serie de Pandas con precio de cierre semanal filtrada para el año 2026
+        pd_series = tf_client.weekly_price(from_date=dt.date(2026, 1, 1),
+                                           to_date=dt.date(2026, 12, 31))
 
         logger.info(pd_series)
 
