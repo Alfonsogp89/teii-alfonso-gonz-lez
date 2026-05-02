@@ -40,3 +40,12 @@ class FinanceClientIOError(FinanceClientError):
     """
 
     pass
+
+
+class FinanceClientParamError(FinanceClientError):
+    """
+    Invalid parameter provided to finance client.
+    """
+
+    pass
+
