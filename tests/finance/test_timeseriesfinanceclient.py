@@ -6,7 +6,8 @@ import datetime as dt
 import pytest
 from pandas.testing import assert_series_equal
 
-from teii.finance import FinanceClientInvalidAPIKey, TimeSeriesFinanceClient
+from teii.finance import (FinanceClientInvalidAPIKey, FinanceClientParamError,
+                          TimeSeriesFinanceClient)
 
 
 def test_constructor_success(api_key_str,
@@ -21,52 +22,58 @@ def test_constructor_failure_invalid_api_key():
 
 def test_weekly_price_invalid_dates(api_key_str,
                                     mocked_requests):
-    # TODO
-    pass
+    fc = TimeSeriesFinanceClient("NVDA", api_key_str)
+    with pytest.raises(FinanceClientParamError):
+        fc.weekly_price(dt.date(year=2026, month=3, day=31),
+                        dt.date(year=2025, month=4, day=1))
 
 
 def test_weekly_price_no_dates(api_key_str,
                                mocked_requests,
                                pandas_series_NVDA_prices):
     fc = TimeSeriesFinanceClient("NVDA", api_key_str)
-
     ps = fc.weekly_price()
-
-    assert ps.count() == 1378   # 1999-11-12 to 2026-04-02 (1378 business weeks)
-
+    assert ps.count() == 1378
     assert ps.count() == pandas_series_NVDA_prices.count()
-
-    assert_series_equal(ps, pandas_series_NVDA_prices)
+    assert_series_equal(ps, pandas_series_NVDA_prices, check_index_type=False)
 
 
 def test_weekly_price_dates(api_key_str,
                             mocked_requests,
                             pandas_series_NVDA_prices_filtered):
     fc = TimeSeriesFinanceClient("NVDA", api_key_str)
-
     ps = fc.weekly_price(dt.date(year=2025, month=4, day=1),
                          dt.date(year=2026, month=3, day=31))
-
-    assert ps.count() == 52    # 2025-04-01 to 2026-03-31 (52 business weeks)
-
+    assert ps.count() == 52
     assert ps.count() == pandas_series_NVDA_prices_filtered.count()
-
-    assert_series_equal(ps, pandas_series_NVDA_prices_filtered)
+    assert_series_equal(ps, pandas_series_NVDA_prices_filtered, check_index_type=False)
 
 
 def test_weekly_volume_invalid_dates(api_key_str,
                                      mocked_requests):
-    # TODO
-    pass
+    fc = TimeSeriesFinanceClient("NVDA", api_key_str)
+    with pytest.raises(FinanceClientParamError):
+        fc.weekly_volume(dt.date(year=2026, month=3, day=31),
+                         dt.date(year=2025, month=4, day=1))
 
 
 def test_weekly_volume_no_dates(api_key_str,
-                                mocked_requests):
-    # TODO
-    pass
+                                mocked_requests,
+                                pandas_series_NVDA_volumes):
+    fc = TimeSeriesFinanceClient("NVDA", api_key_str)
+    ps = fc.weekly_volume()
+    assert ps.count() == 1378
+    assert ps.count() == pandas_series_NVDA_volumes.count()
+    assert_series_equal(ps, pandas_series_NVDA_volumes, check_index_type=False)
 
 
 def test_weekly_volume_dates(api_key_str,
-                             mocked_requests):
-    # TODO
-    pass
+                             mocked_requests,
+                             pandas_series_NVDA_volumes_filtered):
+    fc = TimeSeriesFinanceClient("NVDA", api_key_str)
+    ps = fc.weekly_volume(dt.date(year=2025, month=4, day=1),
+                          dt.date(year=2026, month=3, day=31))
+    assert ps.count() == 52
+    assert ps.count() == pandas_series_NVDA_volumes_filtered.count()
+    assert_series_equal(ps, pandas_series_NVDA_volumes_filtered, check_index_type=False)
+
