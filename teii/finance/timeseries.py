@@ -122,3 +122,25 @@ class TimeSeriesFinanceClient(FinanceClient):
             series = series.loc[pd.Timestamp(from_date):pd.Timestamp(to_date)]   # type: ignore
 
         return series
+
+    def yearly_dividends(self,
+                         from_year: Optional[int] = None,
+                         to_year: Optional[int] = None) -> pd.Series:
+        """ Return yearly dividends from 'from_year' to 'to_year'. """
+
+        assert self._data_frame is not None
+
+        series = self._data_frame['dividend']
+
+        if from_year is not None and to_year is not None and from_year > to_year:
+            raise FinanceClientParamError("'from_year' must be less than or equal to 'to_year'")
+
+        # FIXME: type hint error
+        if from_year is not None and to_year is not None:
+            series = series.loc[str(from_year):str(to_year)]   # type: ignore
+        elif from_year is not None:
+            series = series.loc[str(from_year):]               # type: ignore
+        elif to_year is not None:
+            series = series.loc[:str(to_year)]                 # type: ignore
+
+        return series.resample('YE').sum()
