@@ -162,10 +162,9 @@ class TimeSeriesFinanceClient(FinanceClient):
             df = df.loc[pd.Timestamp(from_date):pd.Timestamp(to_date)]   # type: ignore
 
         df['variation'] = df['high'] - df['low']
-        
+
         # Find the row with the maximum variation
         max_idx = df['variation'].idxmax()
         max_row = df.loc[max_idx]
-        
-        return (max_idx.date(), float(max_row['high']), float(max_row['low']), float(max_row['variation']))
 
+        return (max_idx.date(), float(max_row['high']), float(max_row['low']), float(max_row['variation']))
