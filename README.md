@@ -23,7 +23,7 @@ jq -C < IBM.json | less -R # Para visualizar resultado
 
 devuelve información bursátil de la empresa IBM en formato JSON.
 
-:warning: Para utilizar la API de Alpha Vantage sin restricciones es necesario
+Para utilizar la API de Alpha Vantage sin restricciones es necesario
 obtener una [*API Key* gratuita](https://www.alphavantage.co/support/#api-key)
 (`MY_ALPHA_VANTAGE_API_KEY`).
 
