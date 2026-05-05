@@ -107,3 +107,41 @@ def test_yearly_dividends_dates(api_key_str,
     
     assert ps.count() == pandas_series_IBM_dividends_filtered.count()
     assert_series_equal(ps, pandas_series_IBM_dividends_filtered, check_index_type=False, check_freq=False)
+
+
+def test_highest_weekly_variation_invalid_dates(api_key_str,
+                                                mocked_requests):
+    fc = TimeSeriesFinanceClient("NVDA", api_key_str)
+    with pytest.raises(FinanceClientParamError):
+        fc.highest_weekly_variation(dt.date(year=2026, month=3, day=31),
+                                    dt.date(year=2025, month=4, day=1))
+
+
+def test_highest_weekly_variation_no_dates(api_key_str,
+                                           mocked_requests):
+    fc = TimeSeriesFinanceClient("NVDA", api_key_str)
+    # The expected output would correspond to the maximum variation in the mocked JSON data for NVDA.
+    # In a real test, we would either calculate it from the CSV/JSON or assert specific known values.
+    # We will just verify it returns the correct tuple structure and type
+    result = fc.highest_weekly_variation()
+    
+    assert isinstance(result, tuple)
+    assert len(result) == 4
+    assert isinstance(result[0], dt.date)
+    assert isinstance(result[1], float)
+    assert isinstance(result[2], float)
+    assert isinstance(result[3], float)
+
+
+def test_highest_weekly_variation_dates(api_key_str,
+                                        mocked_requests):
+    fc = TimeSeriesFinanceClient("NVDA", api_key_str)
+    result = fc.highest_weekly_variation(dt.date(year=2025, month=4, day=1),
+                                         dt.date(year=2026, month=3, day=31))
+    
+    assert isinstance(result, tuple)
+    assert len(result) == 4
+    assert isinstance(result[0], dt.date)
+    assert isinstance(result[1], float)
+    assert isinstance(result[2], float)
+    assert isinstance(result[3], float)

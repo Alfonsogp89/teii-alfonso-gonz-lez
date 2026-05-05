@@ -144,3 +144,28 @@ class TimeSeriesFinanceClient(FinanceClient):
             series = series.loc[:str(to_year)]                 # type: ignore
 
         return series.resample('YE').sum()
+
+    def highest_weekly_variation(self,
+                                 from_date: Optional[dt.date] = None,
+                                 to_date: Optional[dt.date] = None) -> tuple:
+        """ Return highest weekly variation (date, high, low, difference) from 'from_date' to 'to_date'. """
+
+        assert self._data_frame is not None
+
+        df = self._data_frame[['high', 'low']].copy()
+
+        if from_date is not None and to_date is not None and from_date > to_date:
+            raise FinanceClientParamError("'from_date' must be less than or equal to 'to_date'")
+
+        # FIXME: type hint error
+        if from_date is not None and to_date is not None:
+            df = df.loc[pd.Timestamp(from_date):pd.Timestamp(to_date)]   # type: ignore
+
+        df['variation'] = df['high'] - df['low']
+        
+        # Find the row with the maximum variation
+        max_idx = df['variation'].idxmax()
+        max_row = df.loc[max_idx]
+        
+        return (max_idx.date(), float(max_row['high']), float(max_row['low']), float(max_row['variation']))
+
