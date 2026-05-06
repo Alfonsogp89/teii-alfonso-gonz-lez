@@ -16,7 +16,7 @@ def read(path):
 
 
 setup(
-    name="teii",                                            # nombre del paquete
+    name="teii-alfonsogp89",                               # nombre del paquete
     version=f"{os.environ.get('GITHUB_RUN_NUMBER', 0)}",    # versión del paquete
     # descripción del paquete en TestPyPi
     description="Tecnologías Específicas en Ingeniería Informática",
