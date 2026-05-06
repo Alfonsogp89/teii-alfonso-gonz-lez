@@ -39,7 +39,7 @@ def main():
 
     # Define ticker y API key
     ticker = 'IBM'
-    my_alpha_vantage_api_key = 'KPCY3YFXA24HEJSY'
+    my_alpha_vantage_api_key = 'TEII_FINANCE_API_KEY'
     # Sólo funcionará con IBM (para demos). Obtener un API key real de:
     # https://www.alphavantage.co/support/#api-key
     # (Pero hay fuertes limitaciones de uso diario: no más de 1 llamada por segundo,
