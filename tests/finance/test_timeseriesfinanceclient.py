@@ -90,10 +90,10 @@ def test_yearly_dividends_no_dates(api_key_str,
                                    pandas_series_IBM_dividends):
     fc = TimeSeriesFinanceClient("IBM", api_key_str)
     ps = fc.yearly_dividends()
-    
+
     # Compare with our fixture
     assert ps.count() == pandas_series_IBM_dividends.count()
-    
+
     # We might need to adjust freq for pandas checking
     # assert_series_equal can be strict on the frequency attribute
     assert_series_equal(ps, pandas_series_IBM_dividends, check_index_type=False, check_freq=False)
@@ -104,7 +104,7 @@ def test_yearly_dividends_dates(api_key_str,
                                 pandas_series_IBM_dividends_filtered):
     fc = TimeSeriesFinanceClient("IBM", api_key_str)
     ps = fc.yearly_dividends(from_year=2024, to_year=2026)
-    
+
     assert ps.count() == pandas_series_IBM_dividends_filtered.count()
     assert_series_equal(ps, pandas_series_IBM_dividends_filtered, check_index_type=False, check_freq=False)
 
@@ -124,7 +124,7 @@ def test_highest_weekly_variation_no_dates(api_key_str,
     # In a real test, we would either calculate it from the CSV/JSON or assert specific known values.
     # We will just verify it returns the correct tuple structure and type
     result = fc.highest_weekly_variation()
-    
+
     assert isinstance(result, tuple)
     assert len(result) == 4
     assert isinstance(result[0], dt.date)
@@ -138,7 +138,7 @@ def test_highest_weekly_variation_dates(api_key_str,
     fc = TimeSeriesFinanceClient("NVDA", api_key_str)
     result = fc.highest_weekly_variation(dt.date(year=2025, month=4, day=1),
                                          dt.date(year=2026, month=3, day=31))
-    
+
     assert isinstance(result, tuple)
     assert len(result) == 4
     assert isinstance(result[0], dt.date)
