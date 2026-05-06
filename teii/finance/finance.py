@@ -63,7 +63,7 @@ class FinanceClient(ABC):
 
         # Avoid adding multiple handlers if already configured
         if not self._logger.handlers:
-            handler = logging.StreamHandler()
+            handler: Union[logging.StreamHandler, logging.FileHandler] = logging.StreamHandler()
             if logging_file:
                 handler = logging.FileHandler(logging_file)
             formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
