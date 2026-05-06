@@ -37,6 +37,7 @@ class FinanceClient(ABC):
         if self._api_key is None:
             self._api_key = os.getenv("TEII_FINANCE_API_KEY")
         if self._api_key is None or not isinstance(self._api_key, str):
+            self._logger.critical("API key is not available or invalid.")
             raise FinanceClientInvalidAPIKey(f"{self.__class__.__qualname__} operation failed")
 
         # Query Finance API
@@ -59,6 +60,15 @@ class FinanceClient(ABC):
                        logging_file: Optional[str]) -> None:
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(logging_level)
+
+        # Avoid adding multiple handlers if already configured
+        if not self._logger.handlers:
+            handler = logging.StreamHandler()
+            if logging_file:
+                handler = logging.FileHandler(logging_file)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            self._logger.addHandler(handler)
 
     @classmethod
     def _build_base_query_url(cls) -> str:
@@ -93,6 +103,7 @@ class FinanceClient(ABC):
             response = requests.get(f"{url}{params}")
             assert response.status_code == 200
         except Exception as e:
+            self._logger.error("Failed to query the API endpoint.")
             raise FinanceClientAPIError("Unsuccessful API access") from e
         else:
             self._logger.info("Successful API access "
@@ -120,8 +131,8 @@ class FinanceClient(ABC):
             self._json_metadata = json_data_downloaded[self._build_query_metadata_key()]
             self._json_data = json_data_downloaded[self._build_query_data_key()]
         except Exception as e:
-            self._logger.exception("Error processing query response")
-            print(f"Response content: '{response.text}'")
+            self._logger.error("Error processing query response")
+            self._logger.debug(f"Response content: '{response.text}'")
             raise FinanceClientInvalidData("Invalid data") from e
         else:
             self._logger.info("Metadata and data fields found")
