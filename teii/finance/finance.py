@@ -16,7 +16,14 @@ from teii.finance import (FinanceClientAPIError, FinanceClientInvalidAPIKey,
 
 
 class FinanceClient(ABC):
-    """ Wrapper around the Finance API. """
+    """
+    Abstract base class for finance API clients.
+
+    Attributes
+    ----------
+    _FinanceBaseQueryURL : str
+        Base URL for the finance API.
+    """
 
     _FinanceBaseQueryURL = "https://www.alphavantage.co/query?"  # Class variable
 
@@ -24,7 +31,30 @@ class FinanceClient(ABC):
                  api_key: Optional[str] = None,
                  logging_level: Union[int, str] = logging.WARNING,
                  logging_file: Optional[str] = None) -> None:
-        """ FinanceClient constructor. """
+        """
+        Initialize the FinanceClient.
+
+        Parameters
+        ----------
+        ticker : str
+            The stock ticker symbol.
+        api_key : str, optional
+            The API key for the finance API. If not provided, it will be read from
+            the TEII_FINANCE_API_KEY environment variable.
+        logging_level : int or str, optional
+            The logging level (default is logging.WARNING).
+        logging_file : str, optional
+            The file to write logs to.
+
+        Raises
+        ------
+        FinanceClientInvalidAPIKey
+            If the API key is not provided or is invalid.
+        FinanceClientAPIError
+            If the API request fails.
+        FinanceClientInvalidData
+            If the API response data is invalid.
+        """
 
         self._ticker: str = ticker
         self._api_key: Optional[str] = api_key
@@ -58,6 +88,17 @@ class FinanceClient(ABC):
     def _setup_logging(self,
                        logging_level: Union[int, str],
                        logging_file: Optional[str]) -> None:
+        """
+        Set up logging configuration.
+
+        Parameters
+        ----------
+        logging_level : int or str
+            The logging level.
+        logging_file : str, optional
+            The file to write logs to.
+        """
+
         self._logger = logging.getLogger(__name__)
         self._logger.setLevel(logging_level)
 
@@ -72,30 +113,44 @@ class FinanceClient(ABC):
 
     @classmethod
     def _build_base_query_url(cls) -> str:
-        """Return base query URL.
+        """
+        Return base query URL.
 
-        URL is independent from the query type.
-            https://www.alphavantage.co/documentation/
-        URL format:
-            https://www.alphavantage.co/query?PARAMS
+        Returns
+        -------
+        str
+            The base query URL.
         """
 
         return cls._FinanceBaseQueryURL
 
     @abstractmethod
     def _build_base_query_url_params(self) -> str:
-        """ Return base query URL parameters.
+        """
+        Return base query URL parameters.
 
-        Parameters are dependent on the query type:
-            https://www.alphavantage.co/documentation/
-        URL format:
-            https://www.alphavantage.co/query?PARAMS
+        Returns
+        -------
+        str
+            The query parameters.
         """
 
         pass  # pragma: nocover
 
     def _query_api(self) -> requests.Response:
-        """ Query API endpoint. """
+        """
+        Query the API endpoint.
+
+        Returns
+        -------
+        requests.Response
+            The response from the API.
+
+        Raises
+        ------
+        FinanceClientAPIError
+            If the API request is unsuccessful.
+        """
 
         try:
             url = self.__class__._build_base_query_url()
@@ -112,19 +167,45 @@ class FinanceClient(ABC):
 
     @classmethod
     def _build_query_metadata_key(cls) -> str:
-        """ Return metadata query key. """
+        """
+        Return the metadata query key.
+
+        Returns
+        -------
+        str
+            The metadata key.
+        """
 
         return "Meta Data"
 
     @classmethod
     @abstractmethod
     def _build_query_data_key(cls) -> str:
-        """ Return data query key. """
+        """
+        Return the data query key.
+
+        Returns
+        -------
+        str
+            The data key.
+        """
 
         pass  # pragma: nocover
 
     def _process_query_response(self, response: requests.Response) -> None:
-        """ Preprocess query data. """
+        """
+        Preprocess query data from the API response.
+
+        Parameters
+        ----------
+        response : requests.Response
+            The response from the API.
+
+        Raises
+        ------
+        FinanceClientInvalidData
+            If the response data cannot be processed.
+        """
 
         try:
             json_data_downloaded = response.json()
@@ -142,19 +223,45 @@ class FinanceClient(ABC):
 
     @abstractmethod
     def _validate_query_data(self) -> None:
-        """ Validate query data. """
+        """
+        Validate the query data.
+        """
 
         pass  # pragma: nocover
 
     def to_pandas(self) -> pd.DataFrame:
-        """ Return pandas data frame from json data. """
+        """
+        Return the data as a pandas DataFrame.
+
+        Returns
+        -------
+        pd.DataFrame
+            The processed finance data.
+        """
 
         assert self._data_frame is not None
 
         return self._data_frame
 
     def to_csv(self, path2file: Path) -> Path:
-        """ Write json data into csv file 'path2file'. """
+        """
+        Write the data to a CSV file.
+
+        Parameters
+        ----------
+        path2file : Path
+            The path to the CSV file.
+
+        Returns
+        -------
+        Path
+            The path to the created CSV file.
+
+        Raises
+        ------
+        FinanceClientIOError
+            If the file cannot be written.
+        """
 
         assert self._data_frame is not None
 
