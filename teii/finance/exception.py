@@ -2,9 +2,11 @@
 
 
 class FinanceClientError(Exception):
-    """FinanceClient exception base class.
+    """
+    Base class for finance client exceptions.
 
-    https://www.loggly.com/blog/exceptional-logging-of-exceptions-in-python/ (Transformer Pattern)
+    Source:
+        https://www.loggly.com/blog/exceptional-logging-of-exceptions-in-python/
     """
 
     pass
