@@ -17,29 +17,39 @@ jobs:
 
   test-package:
     # The type of runner that the job will run on
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v4
 
     # Sets up python version
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v6
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.11
+        python-version: ${{ matrix.python-version }}
 
     # Installs tox
     - name: Install tox
       run: |
         pip install tox==4.25.0
 
-    # Runs tox
-    - name: Run flake8, mypy and pytest with tox
+    # Runs tox (only for the current python version in the matrix)
+    - name: Run tests with tox
       run: |
-        tox -e lint,py311
+        PY_ENV=$(echo ${{ matrix.python-version }} | tr -d .)
+        tox -e py$PY_ENV
+
+    # Run linting only on Python 3.11 to avoid redundancy
+    - name: Run linting
+      if: matrix.python-version == '3.11'
+      run: |
+        tox -e lint
 
   build-and-publish-package:
     # The type of runner that the job will run on
@@ -50,11 +60,11 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout repository
-      uses: actions/checkout@v5
+      uses: actions/checkout@v4
 
     # Sets up python version
     - name: Set up Python 3.11
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v5
       with:
         python-version: 3.11
 
