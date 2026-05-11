@@ -262,21 +262,21 @@ lint: commands[1]> mypy -v -m teii.finance --ignore-missing-imports
 [...]
 Success: no issues found in 1 source file
 lint: exit 0 (0.10 seconds) /home/alumno/teii-finance.git> mypy -v -m teii.finance --ignore-missing-imports pid=162027
-lint: OK ✔ in 1 minute 16.11 seconds
+lint: OK  in 1 minute 16.11 seconds
 
 [... bucle de instalación de wheel / paquetes necesarios + ejecución de pruebas pytest sobre Python 3.11.9 y 3.12.8: ...]
 
 PASSED tests/finance/test_timeseriesfinanceclient.py::test_weekly_volume_dates
 ============================================================================================== 8 passed in 0.06s ==============================================================================================
 py311: exit 0 (0.57 seconds) /home/alumno/teii-finance.git> pytest -rA -v --cov teii --cov-report term-missing tests/finance pid=166230
-py311: OK ✔ in 1 minute 22.77 seconds
+py311: OK  in 1 minute 22.77 seconds
 
 [...]
 
 PASSED tests/finance/test_timeseriesfinanceclient.py::test_weekly_volume_dates
 ============================================================================================== 8 passed in 0.05s ==============================================================================================
 py312: exit 0 (2.30 seconds) /home/alumno/teii-finance.git> pytest -rA -v --cov teii --cov-report term-missing tests/finance pid=167766
-py312: OK ✔ in 1 minute 50.1 seconds
+py312: OK  in 1 minute 50.1 seconds
 
 [... Resumen final (3.11 y 3.12 OK, 3.13 skipped por no estar disponible): ...]
 

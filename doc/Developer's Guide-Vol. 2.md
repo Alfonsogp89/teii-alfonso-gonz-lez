@@ -637,7 +637,7 @@ Si ejecutamos `example.py` después de realizar los cambios anteriores:
 ```bash
 # Salida de logging (default stderr) enviada a /dev/null, para ver sólo salida tracemalloc:
 $ python3 example.py 2> /dev/null 
-❯ python example.py 2> /dev/null 
+ python example.py 2> /dev/null 
 decoder.py:353                                     size = 1054742 bytes     count = 13808    avg =   76.4 bytes
 take.py:157                                        size =   78120 bytes     count =    21    avg = 3720.0 bytes
 encoder.py:258                                     size =   77867 bytes     count =  1387    avg =   56.1 bytes

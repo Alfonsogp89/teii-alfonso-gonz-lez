@@ -17,7 +17,7 @@ def __():
 def __(mo):
     mo.md(
         """
-        # 🌦️ Open-Meteo Dashboard
+        #  Open-Meteo Dashboard
         Esta aplicación es un dashboard interactivo construido con **Marimo**.
         Consume datos meteorológicos de la API pública [Open-Meteo](https://open-meteo.com/),
         y los procesa con **pandas** para visualizarlos.
@@ -31,7 +31,7 @@ def __(mo):
 
 @app.cell
 def __(mo):
-    mo.md("## ⚙️ Configuración de Datos")
+    mo.md("##  Configuración de Datos")
     return
 
 
