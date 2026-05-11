@@ -8,17 +8,22 @@ app = marimo.App(width="medium")
 def __():
     import marimo as mo
     import pandas as pd
-    import datetime as dt
-    from teii.finance.timeseries import TimeSeriesFinanceClient
-    return dt, mo, pd, TimeSeriesFinanceClient
+    import requests
+    import json
+    return json, mo, pd, requests
 
 
 @app.cell
 def __(mo):
     mo.md(
-        r"""
-        # 📈 TEII Finance Dashboard
-        Esta aplicación permite consultar datos financieros utilizando el paquete `teii.finance`.
+        """
+        # 🌦️ Open-Meteo Dashboard
+        Esta aplicación es un dashboard interactivo construido con **Marimo**.
+        Consume datos meteorológicos de la API pública [Open-Meteo](https://open-meteo.com/),
+        y los procesa con **pandas** para visualizarlos.
+
+        Demuestra los fundamentos de cuadernos reactivos, uso de librerías gráficas integradas
+        en Marimo (`mo.ui.chart`) y acceso a APIs HTTP.
         """
     )
     return
@@ -26,137 +31,113 @@ def __(mo):
 
 @app.cell
 def __(mo):
-    # Widgets de configuración
-    ticker_input = mo.ui.text(value="IBM", label="Ticker Symbol", placeholder="e.g., IBM, AAPL")
-    api_key_input = mo.ui.text(value="TEII_FINANCE_API_KEY", label="API Key (AlphaVantage)")
+    mo.md("## ⚙️ Configuración de Datos")
+    return
 
-    query_type = mo.ui.dropdown(
+
+@app.cell
+def __(mo):
+    # Selector de origen de datos
+    data_source = mo.ui.radio(
         options={
-            "Precios Semanales": "price",
-            "Volumen Semanal": "volume",
-            "Dividendos Anuales": "dividends",
-            "Variación Máxima": "variation"
+            "API Pública (Open-Meteo)": "api",
+            "Datos Locales Predescargados": "local"
         },
-        value="Precios Semanales",
-        label="Tipo de Consulta"
+        value="API Pública (Open-Meteo)",
+        label="Origen de los datos"
     )
 
-    mo.hstack([ticker_input, api_key_input, query_type], justify="start")
-    return api_key_input, query_type, ticker_input
+    # Selector de variable meteorológica
+    weather_variable = mo.ui.dropdown(
+        options={
+            "Temperatura (°C)": "temperature_2m",
+            "Precipitación (mm)": "precipitation"
+        },
+        value="Temperatura (°C)",
+        label="Variable a mostrar"
+    )
+
+    mo.hstack([data_source, weather_variable], justify="start")
+    return data_source, weather_variable
 
 
 @app.cell
-def __(dt, mo, query_type):
-    # Widgets de fecha condicionales
-    today = dt.date.today()
-    last_year = today.replace(year=today.year - 1)
-
-    date_range = None
-    year_range = None
-
-    if query_type.value in ["price", "volume", "variation"]:
-        date_range = mo.ui.date_range(
-            start=dt.date(2020, 1, 1),
-            stop=today,
-            value=[dt.date(2024, 1, 1), today],
-            label="Rango de Fechas"
-        )
-        display_date = date_range
-    else:
-        year_range = mo.ui.range_slider(
-            start=2010,
-            stop=today.year,
-            value=[2020, today.year],
-            label="Rango de Años"
-        )
-        display_date = year_range
-
-    display_date
-    return date_range, display_date, last_year, today, year_range
-
-
-@app.cell
-def __(TimeSeriesFinanceClient, api_key_input, ticker_input):
-    # Inicialización del cliente
-    # Nota: El constructor hace una petición a la API
-    client = None
+def __(data_source, json, mo, requests):
+    # Recuperación de los datos
+    raw_data = None
     error_msg = None
 
-    if ticker_input.value and api_key_input.value:
-        try:
-            client = TimeSeriesFinanceClient(
-                ticker=ticker_input.value,
-                api_key=api_key_input.value
+    try:
+        if data_source.value == "api":
+            # Coordenadas de Madrid como ejemplo
+            url = (
+                "https://api.open-meteo.com/v1/forecast?latitude=40.4165"
+                "&longitude=-3.7026&hourly=temperature_2m,precipitation&timezone=Europe%2FMadrid"
             )
-        except Exception as e:
-            error_msg = str(e)
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+            raw_data = response.json()
+        else:
+            # Uso de archivo local
+            with open("madrid_weather.json", "r") as f:
+                raw_data = json.load(f)
+    except Exception as e:
+        error_msg = str(e)
 
-    return client, error_msg
+    if error_msg:
+        mo.callout(f"Error al cargar los datos: {error_msg}", kind="error")
+    else:
+        mo.callout(f"Datos cargados exitosamente desde: **{data_source.value}**", kind="success")
+    return error_msg, raw_data, response, url
 
 
 @app.cell
-def __(client, date_range, error_msg, mo, query_type, year_range):
-    # Ejecución de la consulta y visualización
-    if error_msg:
-        result_view = mo.callout(f"Error al conectar con la API: {error_msg}", kind="error")
-    elif client is None:
-        result_view = mo.md("Esperando configuración...")
+def __(error_msg, pd, raw_data):
+    # Procesamiento con pandas
+    df = None
+    if not error_msg and raw_data:
+        # Extraemos los campos horarios
+        hourly_data = raw_data.get("hourly", {})
+
+        if hourly_data:
+            df = pd.DataFrame(hourly_data)
+            # Convertimos la columna de tiempo a datetime
+            df["time"] = pd.to_datetime(df["time"])
+    return df, hourly_data
+
+
+@app.cell
+def __(df, mo, weather_variable):
+    # Visualización
+    if df is not None:
+        title = f"Pronóstico: {weather_variable.label}"
+
+        # Color según variable
+        color = "#ff7f0e" if weather_variable.value == "temperature_2m" else "#1f77b4"
+
+        # Gráfico reactivo (Marimo usa Altair por debajo)
+        chart = mo.ui.chart(
+            df,
+            mark="line",
+            x="time",
+            y=weather_variable.value
+        ).properties(title=title)
+
+        # Tabla interactiva
+        table = mo.ui.table(df[["time", weather_variable.value]], pagination=True)
+
+        # Mostrar ambos verticalmente
+        display = mo.vstack([
+            mo.md("### Gráfico Evolutivo"),
+            chart,
+            mo.md("### Datos Detallados"),
+            table
+        ])
     else:
-        try:
-            if query_type.value == "price":
-                data = client.weekly_price(from_date=date_range.value[0], to_date=date_range.value[1])
-                title = f"Precios de Cierre Ajustados - {client._ticker}"
-                # Gráfico y tabla
-                result_view = mo.vstack([
-                    mo.md(f"## {title}"),
-                    mo.ui.chart(data.reset_index(), mark="line", x="index", y="aclose").properties(title=title),
-                    mo.ui.table(data.reset_index(), label="Datos Detallados")
-                ])
+        display = mo.md("Esperando datos...")
 
-            elif query_type.value == "volume":
-                data = client.weekly_volume(from_date=date_range.value[0], to_date=date_range.value[1])
-                title = f"Volumen de Negociación - {client._ticker}"
-                result_view = mo.vstack([
-                    mo.md(f"## {title}"),
-                    mo.ui.chart(data.reset_index(), mark="bar", x="index", y="volume").properties(title=title),
-                    mo.ui.table(data.reset_index(), label="Datos Detallados")
-                ])
-
-            elif query_type.value == "dividends":
-                data = client.yearly_dividends(from_year=int(year_range.value[0]), to_year=int(year_range.value[1]))
-                title = f"Dividendos Anuales Sumados - {client._ticker}"
-                result_view = mo.vstack([
-                    mo.md(f"## {title}"),
-                    mo.ui.chart(data.reset_index(), mark="bar", x="index", y="dividend").properties(title=title),
-                    mo.ui.table(data.reset_index(), label="Datos Detallados")
-                ])
-
-            elif query_type.value == "variation":
-                res = client.highest_weekly_variation(from_date=date_range.value[0], to_date=date_range.value[1])
-                date_max, high, low, diff = res
-                result_view = mo.vstack([
-                    mo.md("## Variación Máxima en el Periodo"),
-                    mo.stat(label="Fecha", value=str(date_max)),
-                    mo.hstack([
-                        mo.stat(label="Máximo", value=f"{high:.2f}"),
-                        mo.stat(label="Mínimo", value=f"{low:.2f}"),
-                        mo.stat(label="Diferencia", value=f"{diff:.2f}", caption="High - Low")
-                    ], justify="space-around"),
-                    mo.md("---"),
-                    mo.md("Los datos se calculan sobre la serie completa filtrada por fechas.")
-                ])
-        except Exception as ex:
-            result_view = mo.callout(f"Error procesando la consulta: {ex}", kind="warn")
-
-    result_view
-    return (
-        date_max,
-        diff,
-        high,
-        low,
-        res,
-        result_view,
-    )
+    display
+    return chart, color, display, table, title
 
 
 if __name__ == "__main__":
